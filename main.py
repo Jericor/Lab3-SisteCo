@@ -1,4 +1,3 @@
-import string
 import math
 
 
@@ -32,7 +31,8 @@ def bin_to_string(binary):
 # entrada: plaintext: texto a encriptar
 #          key: clave a utilizar para el encriptado
 # salida: ciphertext: texto encriptado
-# implementación del cifrado cesar, utilizando como alfabeto los caracteres unicode
+# implementación del cifrado cesar, utilizando como alfabeto los caracteres unicode hasta latin-1 supplement
+# (o sea, desde el caracter con código ascii 0 hasta el caracter con codigo ascii 256)
 def caesar(plaintext, key):
     ciphertext = ""
     for letter in plaintext:
@@ -118,7 +118,8 @@ def xor_decipher(cipherbits, key):
 # entrada: plaintext: texto que se desea encriptar
 #          key: clave para encriptar el texto
 # salida: ciphertext_2: texto encriptado (en binario)
-# primero se crea un texto encriptado con cesar, luego este texto se encripta con xor
+# primero se crea un texto encriptado con cesar, luego este texto se encripta con xor. Se espera que esto genere un
+# texto encriptado mas dificil de descifrar sin acceso a la clave.
 def caexor(plaintext, key):
     ciphertext_1 = caesar(plaintext, key)
     ciphertext_2 = xor(ciphertext_1, key)
@@ -141,7 +142,7 @@ def caexor_decipher(cipherbits, key):
 # writefile("testpaste.txt", text)
 
 text = "hola que tal"
-key = 7
+key = 60
 keyBits = '{0:08b}'.format(key)
 textBits = ''.join(format(ord(i), '08b') for i in text)
 print("texto plano: " + text + "\ntextBits = " + textBits)
