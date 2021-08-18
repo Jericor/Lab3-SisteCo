@@ -1,5 +1,29 @@
 import math
 from Crypto.Util.strxor import strxor as bxor
+import random
+
+# Leer archivo
+# Entrada: nombre del archivo
+# Salida: String de texto del archivo
+def readfile(filename):
+    try:
+        with open(filename,'r') as stream:
+            filetext = stream.read()
+            stream.close()
+    except Exception:
+        filetext = 0
+        print("Archivo no encontrado.")
+    return filetext
+
+# Escribir archivo
+# Entradas: nombre del archivo
+#           texto a escribir
+# Salida: Nada (Se escribe el texto plano)
+def writefile(filename, text):
+    stream = open(filename, 'w')
+    stream.write(text)
+    stream.close()
+    return
 
 # Cifrado Feistel
 # Entradas: texto a encriptar
@@ -11,6 +35,7 @@ from Crypto.Util.strxor import strxor as bxor
 # Y luego se hace un XOR entre el resultado anterior y el lado izquierdo del bloque
 # Se hacen 16 iteraciones del proceso y se procede con el siguiente bloque
 def feistelCipher(text, key, encode):
+    text = fillText(text)
     key_byte = bytes(key, encode)
     text_cipher = ""
     keys = subkey(key_byte)
@@ -48,6 +73,7 @@ def feistelDecipher(text_cipher, key, encode):
             R = L
             L = tmp
         text_decipher = text_decipher + (L + R).decode(encode)
+    text_decipher = unfillText(text_decipher)
     return text_decipher
 
 # Generador de SubLlaves
@@ -62,22 +88,52 @@ def subkey(key):
             subkeys.append(key[i].to_bytes(1,"big") + key[j].to_bytes(1, "big"))
     return subkeys
 
+# Generador de Llave
+# Entrada: Texto a cifrar
+# Salida : Llave de encriptación
+# La llave se genera a partir de 4 caracteres aleatorios dentro del mensaje a encriptar
+def keygen(text):
+    length = len(text)
+    key = ""
+    for i in range(0, 4):
+        key = key + text[random.randint(0, length)]
+    return text
+
+# Rellenador de texto
+# Entrada: Texto a encriptar
+# Salida: Texto rellenado
+# Cuando el texto no tiene una cantidad de caracteres que sea multiplo de 4
+# Se le agrega un string de caracteres '#' para rellenar
+def fillText(text):
+    fill = len(text) % 4
+    fill = "#" * fill
+    text = text + fill
+    return text
+
+def unfillText(text):
+    fill = 0
+    for i in range(1, 4):
+        if text[-i] == "#":
+            fill = fill + 1
+    text = text[:-fill]
+    return text
+
+
 # Codificación en caso de que se quiera cambiar
 encode = "utf-8"
 
-# De momento el programa solo puede encriptar textos con una cantidad de caracteres igual a un multiplo de 4
-text = "hola test tx"
+filename = input("Inserte nombre del archivo contenedor del mensaje: ")
 
-# La llave debe ser un string de 4 caracteres
-## Falta crear una función que pueda generar una llave aleatoria ##
-key = "d9f6"
+text = readfile(filename)
 
-print(text)
+if text:
+    # La llave debe ser un string de 4 caracteres
+    key = keygen(text)
 
-cipherText = feistelCipher(text, key, encode)
+    cipherText = feistelCipher(text, key, encode)
 
-print(cipherText)
+    writefile("encrypted.txt", cipherText)
 
-decipherText = feistelDecipher(cipherText, key, encode)
+    decipherText = feistelDecipher(cipherText, key, encode)
 
-print(decipherText)
+    writefile("desencrypted.txt", decipherText)
