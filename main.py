@@ -1,5 +1,5 @@
 import math
-
+from Crypto.Util.strxor import strxor as bxor
 
 def readfile(filename):
     stream = open(filename,'r')
@@ -140,7 +140,7 @@ def caexor_decipher(cipherbits, key):
 # text = readfile("test.txt")
 # print(text)
 # writefile("testpaste.txt", text)
-
+"""
 text = "hola que tal"
 key = 60
 keyBits = '{0:08b}'.format(key)
@@ -160,3 +160,50 @@ caexortext = caexor(text, key)
 print("cifrado caexor (igual al xor del cesar) = " + caexortext)
 decaexortext = caexor_decipher(caexortext, key)
 print("descifrado caexor = " + decaexortext)
+"""
+
+
+encode = "utf-8"
+
+text = "hola"
+
+key = "d9"
+
+# Empieza el ciclo
+L = bytes(text[:2], encode)
+
+R = bytes(text[2:], encode)
+
+key_byte = bytes(key, encode)
+
+tmp = bxor(R, key_byte)
+
+tmp = bxor(L, tmp)
+
+L = R
+
+R = tmp
+
+# Termina el ciclo
+
+encrypted = (L+R).decode(encode)
+
+# Empieza el ciclo decript
+
+L = bytes(encrypted[:2], encode)
+
+R = bytes(encrypted[2:], encode)
+
+key_byte = bytes(key, encode)
+
+tmp = bxor(R, key_byte)
+
+tmp = bxor(L, tmp)
+
+R = L
+
+L = tmp
+
+# Termina el ciclo
+
+decrypted = (L+R).decode(encode)
