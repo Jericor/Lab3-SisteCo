@@ -45,7 +45,7 @@ def feistelCipher(text, key, encode):
     for i in range(0, len(text), 4):
         L = bytes(text[i:i + 2], encode)
         R = bytes(text[i + 2:i + 4], encode)
-        for j in range(0, 8):
+        for j in range(0, 16):
             tmp = bxor(R, keys[j])
             tmp = bxor(L, tmp)
             L = R
@@ -70,7 +70,7 @@ def feistelDecipher(text_cipher, key, encode):
     for i in range(0, len(text_cipher), 4):
         L = bytes(text_cipher[i:i+2], encode)
         R = bytes(text_cipher[i+2:i+4], encode)
-        for j in range(0, 8):
+        for j in range(0, 16):
             tmp = bxor(R, keys[15 - j])
             tmp = bxor(L, tmp)
             R = L
@@ -129,12 +129,13 @@ def avalancheEffect(text, encode):
     key_1 = keygen(text)
     tmp = (bytes(key_1, encode)[0]-1).to_bytes(1, "big").decode(encode)
     key_2 = tmp + key_1[1:]
+    print(key_1 + "\n" + key_2)
     cipher_1 = feistelCipher(text, key_1, encode)
     cipher_2 = feistelCipher(text, key_2, encode)
     binary_1 = ''.join(format(ord(i), '08b') for i in cipher_1)
     binary_2 = ''.join(format(ord(i), '08b') for i in cipher_2)
     same_bit = bitComparison(binary_1, binary_2)
-    percentage = (same_bit / len(binary_1)) * 100
+    percentage = 100 - ((same_bit / len(binary_1)) * 100)
     return percentage
 
 def bitComparison(str_1, str_2):
@@ -150,14 +151,18 @@ encode = "utf-8"
 filename = input("Inserte nombre del archivo contenedor del mensaje: ")
 
 text = readfile(filename)
+mean = 0
 
-#percentage = avalancheEffect(text, encode)
-#print(percentage)
-
+for i in range(50):
+    percentage = avalancheEffect(text, encode)
+    mean += percentage
+    print("Avalancha: ", percentage)
+mean = mean/50
+print("promedio: ", mean)
 
 
 if text:
-    """"
+    
     # La llave debe ser un string de 4 caracteres
     key = keygen(text)
 
@@ -173,7 +178,7 @@ if text:
     print(decipher_time)
 
     writefile("desencrypted.txt", decipherText)
-    """
+       
 
     """"
     key = keygen(text)
