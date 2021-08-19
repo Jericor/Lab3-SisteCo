@@ -1,6 +1,9 @@
 import math
 from Crypto.Util.strxor import strxor as bxor
+from Crypto.Cipher import DES
 import random
+import time
+
 
 # Leer archivo
 # Entrada: nombre del archivo
@@ -42,7 +45,7 @@ def feistelCipher(text, key, encode):
     for i in range(0, len(text), 4):
         L = bytes(text[i:i + 2], encode)
         R = bytes(text[i + 2:i + 4], encode)
-        for j in range(0, 16):
+        for j in range(0, 8):
             tmp = bxor(R, keys[j])
             tmp = bxor(L, tmp)
             L = R
@@ -67,7 +70,7 @@ def feistelDecipher(text_cipher, key, encode):
     for i in range(0, len(text_cipher), 4):
         L = bytes(text_cipher[i:i+2], encode)
         R = bytes(text_cipher[i+2:i+4], encode)
-        for j in range(0, 16):
+        for j in range(0, 8):
             tmp = bxor(R, keys[15 - j])
             tmp = bxor(L, tmp)
             R = L
@@ -97,7 +100,7 @@ def keygen(text):
     key = ""
     for i in range(0, 4):
         key = key + text[random.randint(0, length)]
-    return text
+    return key
 
 # Rellenador de texto
 # Entrada: Texto a encriptar
@@ -110,6 +113,9 @@ def fillText(text):
     text = text + fill
     return text
 
+# Limpiador de texto
+# Entrada: Texto desencriptado
+# Salida: Texto desencriptado limpio (sin los '#' al final)
 def unfillText(text):
     fill = 0
     for i in range(1, 4):
@@ -119,6 +125,25 @@ def unfillText(text):
     return text
 
 
+def avalancheEffect(text, encode):
+    key_1 = keygen(text)
+    tmp = (bytes(key_1, encode)[0]-1).to_bytes(1, "big").decode(encode)
+    key_2 = tmp + key_1[1:]
+    cipher_1 = feistelCipher(text, key_1, encode)
+    cipher_2 = feistelCipher(text, key_2, encode)
+    binary_1 = ''.join(format(ord(i), '08b') for i in cipher_1)
+    binary_2 = ''.join(format(ord(i), '08b') for i in cipher_2)
+    same_bit = bitComparison(binary_1, binary_2)
+    percentage = (same_bit / len(binary_1)) * 100
+    return percentage
+
+def bitComparison(str_1, str_2):
+    acum = 0
+    for i in range(0, len(str_1)):
+        if str_1[i] == str_2[i]:
+            acum = acum + 1
+    return acum
+
 # Codificación en caso de que se quiera cambiar
 encode = "utf-8"
 
@@ -126,14 +151,36 @@ filename = input("Inserte nombre del archivo contenedor del mensaje: ")
 
 text = readfile(filename)
 
+#percentage = avalancheEffect(text, encode)
+#print(percentage)
+
+
+
 if text:
+    """"
     # La llave debe ser un string de 4 caracteres
     key = keygen(text)
 
+    start_time = time.time()
     cipherText = feistelCipher(text, key, encode)
-
+    cipher_time = time.time() - start_time
+    print(cipher_time)
     writefile("encrypted.txt", cipherText)
 
+    start_time = time.time()
     decipherText = feistelDecipher(cipherText, key, encode)
+    decipher_time = time.time() - start_time
+    print(decipher_time)
 
     writefile("desencrypted.txt", decipherText)
+    """
+
+    """"
+    key = keygen(text)
+    cipher = DES.new(bytes(key*2, encode), DES.MODE_OFB)
+    start_time = time.time()
+    msg = cipher.iv + cipher.encrypt(bytes(text, encode))
+    cipher_time = time.time() - start_time
+    print(cipher_time)
+    """
+
