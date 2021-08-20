@@ -1,6 +1,4 @@
-import math
 from Crypto.Util.strxor import strxor as bxor
-from Crypto.Cipher import DES
 import random
 import time
 
@@ -156,15 +154,21 @@ def unfillText(text):
 # Se crea una llave y luego una segunda cambiando solo un bit de la primera
 # Luego se ejecuta el cifrado y se comparan los bits uno a uno entre ambas encriptaciones
 def avalancheEffect(text, encode):
+    # Se genera la llave
     key_1 = keygen(text)
+    # Se cambia un bit de la llave creada
     tmp = (bytes(key_1, encode)[0]-1).to_bytes(1, "big").decode(encode)
+    # Se crea la segunda llave con el cambio anterior
     key_2 = tmp + key_1[1:]
-    #print(key_1 + "\n" + key_2)
+    # Se realiza la encriptación con las dos llaves
     cipher_1 = feistelCipher(text, key_1, encode)
     cipher_2 = feistelCipher(text, key_2, encode)
+    # Se obtienen los string binarios
     binary_1 = ''.join(format(ord(i), '08b') for i in cipher_1)
     binary_2 = ''.join(format(ord(i), '08b') for i in cipher_2)
+    # Se comparan los string binarios
     same_bit = bitComparison(binary_1, binary_2)
+    # Se obtiene el porcentaje de bits que cambiaron de manera efectiva
     percentage = 100 - ((same_bit / len(binary_1)) * 100)
     return percentage
 
@@ -193,36 +197,36 @@ def avalancheMean(text, encode):
 # Codificación en caso de que se quiera cambiar
 encode = "utf-8"
 
+# Se pide el archivo de entrada
 filename = input("Inserte nombre del archivo contenedor del mensaje: ")
 
+# Se lee el archivo indicado
 text = readfile(filename)
 
+# En caso de no existir el archivo se termina la ejecución
 if text:
 
+    # Se crea la llave para la encriptación
     key = keygen(text)
 
+    # Se encripta el mensaje y se toma el tiempo de ejecución
     start_time = time.time()
     cipherText = feistelCipher(text, key, encode)
     cipher_time = time.time() - start_time
     print("Tiempo de encriptación: " + str(cipher_time))
+
+    # Se escribe el texto encriptado en un archivo
     writefile("encrypted_"+ filename.split(".")[0] +".txt", cipherText)
 
+    # Se desencripta el mensaje y se toma el tiempo de ejecución
     start_time = time.time()
     decipherText = feistelDecipher(cipherText, key, encode)
     decipher_time = time.time() - start_time
     print("Tiempo de desencriptación: " + str(decipher_time))
 
+    # Se escribe el texto desencriptado en un archivo
     writefile("desencrypted_" + filename.split(".")[0] + ".txt", decipherText)
 
+    # Se realiza un test para el efecto avalancha (50 iteraciones)
     mean = avalancheMean(text, encode)
     print("Media de bits cambiados: " + str(mean) + "%.")
-       
-"""
-    key = keygen(text)
-    cipher = DES.new(bytes(key*2, encode), DES.MODE_OFB)
-    start_time = time.time()
-    msg = cipher.iv + cipher.encrypt(bytes(text, encode))
-    cipher_time = time.time() - start_time
-    print(cipher_time)
-
-"""
